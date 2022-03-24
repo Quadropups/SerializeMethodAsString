@@ -171,9 +171,6 @@ public static class MethodAsString {
                 mi = mi.MakeGenericMethod(genericArguments);
             }
             catch (Exception e) {
-#if UNITY_EDITOR
-                if (Application.isPlaying) Debug.LogError(e);
-#endif
                 return null;
             }
 
@@ -182,9 +179,9 @@ public static class MethodAsString {
         return mi;
     }
 
-    private static readonly string[] TypeNameReplaced = new string[] { ", Version=", ", Culture=", ", PublicKeyToken=", ", Assembly-CSharp", ", mscorlib", ", UnityEngine." };
+    private static readonly string[] TypeNameReplaced = new string[] { ", Version=", ", Culture=", ", PublicKeyToken=", ", Assembly-CSharp", ", mscorlib" };
 
-    private static readonly string[] TypeNameReplacing = new string[] { "", "", "", "", "", ", UnityEngine" };
+    private static readonly string[] TypeNameReplacing = new string[] { "", "", "", "", "" };
 
     private static MethodInfo GetMethod(Type type, string name, Type[] types, bool methodIsGeneric) {
 
