@@ -1,14 +1,8 @@
-
 public static class MethodAsString {
     private static string GetSerializableMethodName(MethodInfo method) {
-        StringBuilder sb = new StringBuilder();
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
 
-        if (method.IsStatic || (GetTypeEnum(method.DeclaringType) == GetTypeEnum(method.ReflectedType))) {
-            sb.Append(GetSerializableTypeName(method.DeclaringType));
-        }
-        else {
-            sb.Append(GetSerializableTypeName(method.ReflectedType));
-        }
+        sb.Append(GetSerializableTypeName(method.ReflectedType));
 
         sb.Append(';');
 
@@ -170,7 +164,7 @@ public static class MethodAsString {
             try {
                 mi = mi.MakeGenericMethod(genericArguments);
             }
-            catch (Exception e) {
+            catch (Exception) {
                 return null;
             }
 
@@ -191,7 +185,32 @@ public static class MethodAsString {
             BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
             try {
                 if (!methodIsGeneric) {
-                    method = baseType.GetMethod(name, bindingFlags, null, types, null);
+                    try {
+                        method = baseType.GetMethod(name, bindingFlags, null, types, null);
+                    }
+                    catch (AmbiguousMatchException) {
+                        MethodInfo[] methods = baseType.GetMethods(bindingFlags);
+                        for (int i = 0; i < methods.Length; i++) {
+                            var m = methods[i];
+                            if (m.Name != name) continue;
+                            if (m.IsGenericMethod) continue;
+                            ParameterInfo[] parameters = m.GetParameters();
+                            if (parameters.Length != types.Length) continue;
+                            bool parametersMatch = true;
+                            for (int j = 0; j < parameters.Length; j++) {
+                                Type expectedParameter = types[j];
+                                Type actualParameter = parameters[j].ParameterType;
+                                //if paramter is not generic we only check if types match
+                                if (actualParameter == expectedParameter) continue;
+                                parametersMatch = false;
+                                break;
+                            }
+                            if (parametersMatch) {
+                                method = m;
+                                break;
+                            }
+                        }
+                    }
                 }
                 else {
                     MethodInfo[] methods = baseType.GetMethods(bindingFlags);
@@ -242,7 +261,7 @@ public static class MethodAsString {
                     }
                 }
             }
-            catch {
+            catch (Exception) {
                 return null;
             }
             if (method != null) break;
